@@ -6,19 +6,20 @@ class Post {
   Post(this._post);
 
   Submission _post;
+  String _fullname = "";
   String _subredditName = "";
   String _authorName = "";
   String _authorAvatar = "";
   String _title = "";
-  String? _selfText = "";
+  String _selfText = "";
   int _votes = 0;
   int _numComments = 0;
   PostType _type = PostType.SELF;
-  bool _isUpvoted;
-  bool _isDownvoted;
-  String _imageLink;
-  String _videoLink;
-  List<String>? _galleryLink;
+  bool _isUpvoted = false;
+  bool _isDownvoted = false;
+  String _link = "";
+  List<String> _galleryLink = [];
+  double _height = 0;
 
   _getPostType() {
     if (_post.data!['url'].toString() != "" &&
@@ -37,7 +38,8 @@ class Post {
       }
     }
     if (_post.data!['post_hint'] != null) {
-      if (_post.data!['post_hint'] == 'link') {
+      if (_post.data!['post_hint'] == 'link' ||
+          _post.data!['post_hint'] == 'rich:video') {
         this._setType = PostType.LINK;
       }
     }
@@ -48,7 +50,8 @@ class Post {
   }
 
   /// Populates the fields by parsing [Submission]
-  Future<void> parse() async {
+  Future parse() async {
+    this._setFullName = _post.fullname!;
     this._setAuthorName = _post.author;
     this._setSubredditName = _post.data!['subreddit_name_prefixed'];
     this._setTitle = _post.title;
@@ -64,8 +67,17 @@ class Post {
         .then((value) => {this._setAvatar = value.data!['icon_img']});
 
     if (_type == PostType.VIDEO) {
-      this._setVideoLink = _post.data!['media']['reddit_video']['hls_url'];
+      this._setLink = _post.data!['media']['reddit_video']['hls_url'];
+      this._setHeight =
+          (_post.data!['media']['reddit_video']['height']).toDouble();
     }
+
+    if (_type == PostType.GIF) {
+      this._setLink = _post.data!['media']['reddit_video']['fallback_url'];
+      this._setHeight =
+          (_post.data!['media']['reddit_video']['height']).toDouble();
+    }
+
     if (_type == PostType.GALLERY) {
       var _galleryLength = _post.data!['media_metadata'].length;
 
@@ -79,10 +91,31 @@ class Post {
       }
     }
 
-    if (_type == PostType.IMAGE) {
-      this._setImageLink = _post.data!['url'].toString();
+    if (_type == PostType.IMAGE || _type == PostType.LINK) {
+      var link = _post.data!['url'].toString();
+      if (link.startsWith('/r/')) {
+        this._setLink = "https://reddit.com" + link;
+      } else {
+        this._setLink = link;
+      }
     }
     return;
+  }
+
+  String get fullname {
+    return _fullname;
+  }
+
+  set _setFullName(String name) {
+    _fullname = name;
+  }
+
+  double get height {
+    return _height;
+  }
+
+  set _setHeight(double height) {
+    _height = height;
   }
 
   String get authorName {
@@ -101,12 +134,12 @@ class Post {
     _subredditName = name;
   }
 
-  String get avatar {
+  String? get avatar {
     return _authorAvatar;
   }
 
-  set _setAvatar(String avatar) {
-    _authorAvatar = avatar;
+  set _setAvatar(String? avatar) {
+    _authorAvatar = avatar!;
   }
 
   String get title {
@@ -118,15 +151,11 @@ class Post {
   }
 
   String get selfText {
-    if (_selfText == null) {
-      return "";
-    } else {
-      return _selfText!;
-    }
+    return _selfText;
   }
 
   set _setSelfText(String? selfText) {
-    _selfText = selfText;
+    _selfText = selfText!;
   }
 
   int get votes {
@@ -178,28 +207,41 @@ class Post {
     return _isDownvoted;
   }
 
-  String get videoLink {
-    return _videoLink;
-  }
-
-  set _setVideoLink(String link) {
-    _videoLink = link;
-  }
-
   set _setGalleryLink(String link) {
-    _galleryLink ??= [];
-    _galleryLink!.add(link);
+    _galleryLink.add(link);
   }
 
   List<String> get galleryLink {
-    return _galleryLink!;
+    return _galleryLink;
   }
 
-  String get imageLink {
-    return _imageLink;
+  String get link {
+    return _link;
   }
 
-  set _setImageLink(String link) {
-    _imageLink = link;
+  set _setLink(String link) {
+    _link = link;
+  }
+
+  Submission get submission {
+    return _post;
+  }
+
+  Map<String, String> get object {
+    return {
+      "fullname": this.fullname,
+      "subredditName": this.subredditName,
+      "authorName": this.authorName,
+      "authorAvatar": this.avatar ?? "",
+      "title": this.title,
+      "selfText": this.selfText,
+      "votes": this.votes.toString(),
+      "numComments": this.numComments.toString(),
+      "type": this.type.toString(),
+      "isUpvoted": this.isUpvoted.toString(),
+      "isDownvoted": this.isDownvoted.toString(),
+      "link": this.link,
+      "_galleryLink": this.galleryLink.toString(),
+    };
   }
 }

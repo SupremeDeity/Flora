@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:draw/draw.dart';
-import 'package:flora/api/login.dart';
-import 'package:flora/globalState.dart';
-import 'package:flora/loading.dart';
+import 'package:flora/Api/login.dart';
+import 'package:flora/State/globalState.dart';
+import 'package:flora/demo/demo.dart';
+import 'package:flora/loadingScreen.dart';
 import 'package:flora/loginScreen.dart';
-import 'package:flora/themes.dart';
+import 'package:flora/State/themes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -118,6 +119,7 @@ class _FloraState extends State<Flora> with SingleTickerProviderStateMixin {
       title: 'Flora',
       home:
           isAuth ? (loaded ? FloraHomePage() : LoadingScreen()) : LoginScreen(),
+      // home: DemoScreen(),
       debugShowCheckedModeBanner: true,
     );
   }

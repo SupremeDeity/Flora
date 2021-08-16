@@ -1,5 +1,5 @@
 import 'package:draw/draw.dart';
-import 'package:flora/globalState.dart';
+import 'package:flora/State/globalState.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
