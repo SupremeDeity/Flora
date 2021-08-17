@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 enum PostType { LINK, IMAGE, GIF, VIDEO, SELF, GALLERY }
 
-class Post extends ChangeNotifier {
+class Post {
   Post(this._post);
 
   Submission _post;
@@ -18,6 +18,7 @@ class Post extends ChangeNotifier {
   PostType _type = PostType.SELF;
   bool _isUpvoted = false;
   bool _isDownvoted = false;
+  bool _isSaved = false;
   String _link = "";
   List<String> _galleryLink = [];
   double _height = 0;
@@ -60,6 +61,7 @@ class Post extends ChangeNotifier {
     this.setVotes = _post.score;
     this.setNumComents = _post.numComments;
     this.setVoted = _post.vote;
+    this._isSaved = _post.saved;
     _getPostType();
 
     await _post.reddit
@@ -166,7 +168,6 @@ class Post extends ChangeNotifier {
 
   set setVotes(int votes) {
     _votes = votes;
-    notifyListeners();
   }
 
   int get numComments {
@@ -224,6 +225,14 @@ class Post extends ChangeNotifier {
 
   set _setLink(String link) {
     _link = link;
+  }
+
+  bool get saved {
+    return _isSaved;
+  }
+
+  set setSaved(bool saved) {
+    _isSaved = saved;
   }
 
   Submission get submission {

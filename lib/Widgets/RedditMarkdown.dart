@@ -3,6 +3,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:markdown/markdown.dart' as md;
 import 'package:url_launcher/url_launcher.dart';
 
+// TODO: Add support for weird characters
 class RedditMarkdown extends StatelessWidget {
   const RedditMarkdown({Key? key, required String data})
       : data = data,

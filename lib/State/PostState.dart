@@ -35,4 +35,8 @@ class PostState with ChangeNotifier {
     });
     notifyListeners();
   }
+
+  void notify() {
+    notifyListeners();
+  }
 }

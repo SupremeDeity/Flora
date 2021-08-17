@@ -1,4 +1,5 @@
 import 'package:draw/draw.dart';
+import 'package:flora/State/PostState.dart';
 import 'package:flora/Types/postType.dart';
 import 'package:flora/State/RedditState.dart';
 import 'package:flora/Widgets/postCard.dart';
@@ -21,18 +22,13 @@ class PostsRoute extends StatefulWidget {
 
 class _PostsRouteState extends State<PostsRoute> {
   late Reddit redditInstance;
+  late Post _post;
   bool _isLoaded = false;
-  List<Post> _posts = [];
+  // List<Post> Provider.of<PostState>(context).getPosts(widget.type) = [];
   List<String> _postsIDs = [];
   ScrollController _scrollController = ScrollController();
   RefreshController _refreshController =
       RefreshController(initialRefresh: false);
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    print("yeah boi they did");
-  }
 
   @override
   void initState() {
@@ -41,7 +37,10 @@ class _PostsRouteState extends State<PostsRoute> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        fetchPosts(_posts.last.fullname);
+        fetchPosts(Provider.of<PostState>(context, listen: false)
+            .getPosts(widget.type)!
+            .last
+            .fullname);
       }
     });
 
@@ -51,7 +50,13 @@ class _PostsRouteState extends State<PostsRoute> {
             Provider.of<RedditInstanceState>(context, listen: false)
                 .getInstance;
       });
-      fetchPosts("");
+      if (Provider.of<PostState>(context, listen: false)
+          .getPosts(widget.type)!
+          .isEmpty) {
+        fetchPosts("");
+      } else {
+        _isLoaded = true;
+      }
     }
   }
 
@@ -84,7 +89,8 @@ class _PostsRouteState extends State<PostsRoute> {
         pPost.parse().then((value) => {
               setState(() {
                 print("${widget.type}: ${submission.id}");
-                _posts.add(pPost);
+                Provider.of<PostState>(context, listen: false)
+                    .addPost(widget.type, pPost);
                 _postsIDs.add(submission.fullname!);
                 _isLoaded = true;
                 if (_refreshController.isRefresh) {
@@ -99,16 +105,17 @@ class _PostsRouteState extends State<PostsRoute> {
   // A singular post
   Widget _buildPost(Post post) {
     return PostCard(
-      post,
-      // key: GlobalKey(),
-    );
+        Provider.of<PostState>(context, listen: false)
+            .getPosts(widget.type)!
+            .indexOf(post),
+        widget.type);
   }
 
   _refreshData() {
     if (mounted) {
       setState(() {
         _isLoaded = false;
-        _posts.clear();
+        Provider.of<PostState>(context, listen: false).clearPost(widget.type);
         _postsIDs.clear();
       });
     }
@@ -117,21 +124,24 @@ class _PostsRouteState extends State<PostsRoute> {
 
   // Fetches and generates posts
   Widget _buildPosts() {
-    print("building posts");
     return SmartRefresher(
       controller: _refreshController,
       onRefresh: () => {_refreshData()},
       child: ListView.builder(
         controller: _scrollController,
-        itemCount: _posts.length,
+        itemCount:
+            Provider.of<PostState>(context).getPosts(widget.type)!.length,
         itemBuilder: (ctx, index) {
-          if (index == _posts.length - 1) {
+          if (index ==
+              Provider.of<PostState>(context).getPosts(widget.type)!.length -
+                  1) {
             return Container(
                 padding: EdgeInsets.all(5),
                 child: Center(
                     child: CircularProgressIndicator(color: Colors.orange)));
           }
-          return _buildPost(_posts[index]);
+          return _buildPost(
+              Provider.of<PostState>(context).getPosts(widget.type)![index]);
         },
       ),
     );

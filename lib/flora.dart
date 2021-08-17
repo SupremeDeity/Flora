@@ -10,9 +10,9 @@ class FloraHomePage extends StatefulWidget {
 }
 
 List<Widget> _navs = [
-  PostsRoute(FilterType.Best, key: UniqueKey()),
-  PostsRoute(FilterType.Hot, key: UniqueKey()),
-  PostsRoute(FilterType.Newest, key: UniqueKey())
+  PostsRoute(FilterType.Best, key: PageStorageKey("p_Best")),
+  PostsRoute(FilterType.Hot, key: PageStorageKey("p_Hot")),
+  PostsRoute(FilterType.Newest, key: PageStorageKey("p_Newest"))
 ];
 
 class _FloraHomePageState extends State<FloraHomePage> {
@@ -30,10 +30,7 @@ class _FloraHomePageState extends State<FloraHomePage> {
         centerTitle: true,
         actions: [IconButton(onPressed: () => {}, icon: Icon(Icons.search))],
       ),
-      body: IndexedStack(
-        children: _navs,
-        index: _currentIndex,
-      ),
+      body: _navs[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(icon: Icon(Icons.star_border), label: 'Best'),

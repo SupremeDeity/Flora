@@ -1,9 +1,13 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chewie/chewie.dart';
+import 'package:draw/draw.dart';
 import 'package:flora/CommentsScreen.dart';
+import 'package:flora/PostScreen.dart';
+import 'package:flora/State/PostState.dart';
 import 'package:flora/Types/postType.dart';
 import 'package:flora/Widgets/RedditMarkdown.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:link_preview_generator/link_preview_generator.dart';
@@ -13,8 +17,9 @@ import 'package:photo_view/photo_view_gallery.dart';
 import 'package:video_player/video_player.dart';
 
 class PostCard extends StatefulWidget {
-  PostCard(this.post, {Key? key}) : super(key: key);
-  final Post post;
+  PostCard(this.postIndex, this.type, {Key? key}) : super(key: key);
+  final int postIndex;
+  final FilterType type;
 
   @override
   _PostCardState createState() => _PostCardState();
@@ -39,24 +44,48 @@ class _PostCardState extends State<PostCard> {
 
   @override
   void initState() {
+    print("postCard Init");
     super.initState();
-    print("got called again: ${widget.key}");
     setState(() {
-      isUpvoted = widget.post.isUpvoted;
-      isDownvoted = widget.post.isDownvoted;
-      votes = widget.post.votes;
-      _isSaved = widget.post.submission.saved;
+      isUpvoted = Provider.of<PostState>(context, listen: false)
+          .getPosts(widget.type)![widget.postIndex]
+          .isUpvoted;
+      isDownvoted = Provider.of<PostState>(context, listen: false)
+          .getPosts(widget.type)![widget.postIndex]
+          .isDownvoted;
+      votes = Provider.of<PostState>(context, listen: false)
+          .getPosts(widget.type)![widget.postIndex]
+          .votes;
+      _isSaved = Provider.of<PostState>(context, listen: false)
+          .getPosts(widget.type)![widget.postIndex]
+          .saved;
 
-      if (widget.post.type == PostType.VIDEO ||
-          widget.post.type == PostType.GIF) {
-        videoLink = widget.post.link;
+      print('isSaved: $_isSaved');
+
+      if (Provider.of<PostState>(context, listen: false)
+                  .getPosts(widget.type)![widget.postIndex]
+                  .type ==
+              PostType.VIDEO ||
+          Provider.of<PostState>(context, listen: false)
+                  .getPosts(widget.type)![widget.postIndex]
+                  .type ==
+              PostType.GIF) {
+        videoLink = Provider.of<PostState>(context, listen: false)
+            .getPosts(widget.type)![widget.postIndex]
+            .link;
         videoPlayerController = VideoPlayerController.network(
           videoLink,
         );
       }
 
-      if (widget.post.type == PostType.VIDEO ||
-          widget.post.type == PostType.GIF) {
+      if (Provider.of<PostState>(context, listen: false)
+                  .getPosts(widget.type)![widget.postIndex]
+                  .type ==
+              PostType.VIDEO ||
+          Provider.of<PostState>(context, listen: false)
+                  .getPosts(widget.type)![widget.postIndex]
+                  .type ==
+              PostType.GIF) {
         videoPlayerController!.initialize();
         setState(() {
           chewieController = ChewieController(
@@ -72,16 +101,67 @@ class _PostCardState extends State<PostCard> {
 
   @override
   void dispose() {
-    if (widget.post.type == PostType.VIDEO) {
+    if (Provider.of<PostState>(context, listen: false)
+            .getPosts(widget.type)![widget.postIndex]
+            .type ==
+        PostType.VIDEO) {
       videoPlayerController!.dispose();
       chewieController!.dispose();
     }
     super.dispose();
   }
 
+  onVote(bool upvote, {bool clearVote = false}) {
+    Post _post = Provider.of<PostState>(context, listen: false)
+        .getPosts(widget.type)![widget.postIndex];
+
+    // Clear any votes and then vote appropriately.
+    _post.submission.clearVote();
+    if (!clearVote) {
+      upvote ? _post.submission.upvote() : _post.submission.downvote();
+    }
+
+    // Update internal state
+    setState(() {
+      upvote ? votes++ : votes--;
+    });
+
+    // Update PostState
+    _post.setVotes = votes;
+    _post.setVoted = clearVote
+        ? VoteState.none
+        : upvote
+            ? VoteState.upvoted
+            : VoteState.downvoted;
+
+    // Notify of changes
+    Provider.of<PostState>(context, listen: false).notify();
+  }
+
+  onSave(bool save) {
+    print("onSave: $save");
+    Post _post = Provider.of<PostState>(context, listen: false)
+        .getPosts(widget.type)![widget.postIndex];
+
+    // Save/unsave the post
+    save ? _post.submission.save() : _post.submission.unsave();
+
+    // Update internal state
+    setState(() {
+      _isSaved = save;
+    });
+
+    print("isSaved: $_isSaved");
+    // Update PostState
+    _post.setSaved = save;
+
+    // Notify of changes
+    Provider.of<PostState>(context, listen: false).notify();
+  }
+
   @override
   Widget build(BuildContext context) {
-    print("build call");
+    print("post card build call");
     return _loaded
         ? GestureDetector(
             onTap: () {
@@ -100,43 +180,75 @@ class _PostCardState extends State<PostCard> {
                 children: [
                   ListTile(
                     leading: CircleAvatar(
-                      foregroundImage: widget.post.avatar != ""
-                          ? CachedNetworkImageProvider(widget.post.avatar!)
+                      foregroundImage: Provider.of<PostState>(context)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .avatar !=
+                              ""
+                          ? CachedNetworkImageProvider(
+                              Provider.of<PostState>(context)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .avatar!)
                           : null,
-                      child: widget.post.avatar == ""
+                      child: Provider.of<PostState>(context)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .avatar ==
+                              ""
                           ? FaIcon(FontAwesomeIcons.redditAlien)
                           : null,
                       backgroundColor: Color.fromARGB(0, 0, 0, 0),
                     ),
-                    title: Text(widget.post.authorName),
-                    subtitle: Text(widget.post.subredditName),
+                    title: Text(Provider.of<PostState>(context)
+                        .getPosts(widget.type)![widget.postIndex]
+                        .authorName),
+                    subtitle: Text(Provider.of<PostState>(context)
+                        .getPosts(widget.type)![widget.postIndex]
+                        .subredditName),
                     trailing: IconButton(
                         onPressed: () => {
-                              print(_isSaved),
-                              _isSaved
-                                  ? widget.post.submission.unsave()
-                                  : widget.post.submission.save(),
-                              setState(() {
-                                _isSaved = !_isSaved;
-                              }),
+                              Provider.of<PostState>(context, listen: false)
+                                      .getPosts(widget.type)![widget.postIndex]
+                                      .saved
+                                  ? onSave(false)
+                                  : onSave(true),
                             },
-                        icon: _isSaved
+                        icon: Provider.of<PostState>(context)
+                                .getPosts(widget.type)![widget.postIndex]
+                                .saved
                             ? Icon(Icons.bookmark_added_rounded)
                             : Icon(Icons.bookmark_add_outlined)),
                   ),
                   ListTile(
-                    title: Text(widget.post.title),
-                    subtitle: widget.post.type == PostType.SELF
+                    title: Text(Provider.of<PostState>(context)
+                        .getPosts(widget.type)![widget.postIndex]
+                        .title),
+                    subtitle: Provider.of<PostState>(context)
+                                .getPosts(widget.type)![widget.postIndex]
+                                .type ==
+                            PostType.SELF
                         ? RedditMarkdown(
-                            data:
-                                (widget.post.selfText.length > 200 && !overflow)
-                                    ? widget.post.selfText.substring(0, 200) +
-                                        "...."
-                                    : widget.post.selfText,
+                            data: (Provider.of<PostState>(context)
+                                            .getPosts(
+                                                widget.type)![widget.postIndex]
+                                            .selfText
+                                            .length >
+                                        200 &&
+                                    !overflow)
+                                ? Provider.of<PostState>(context)
+                                        .getPosts(
+                                            widget.type)![widget.postIndex]
+                                        .selfText
+                                        .substring(0, 200) +
+                                    "...."
+                                : Provider.of<PostState>(context)
+                                    .getPosts(widget.type)![widget.postIndex]
+                                    .selfText,
                           )
                         : null,
                   ),
-                  (widget.post.type == PostType.GALLERY)
+                  (Provider.of<PostState>(context)
+                              .getPosts(widget.type)![widget.postIndex]
+                              .type ==
+                          PostType.GALLERY)
                       ? Container(
                           height: 300,
                           child: Stack(
@@ -148,7 +260,10 @@ class _PostCardState extends State<PostCard> {
                                     currentImageIndex = index + 1;
                                   });
                                 },
-                                itemCount: widget.post.galleryLink.length,
+                                itemCount: Provider.of<PostState>(context)
+                                    .getPosts(widget.type)![widget.postIndex]
+                                    .galleryLink
+                                    .length,
                                 builder: (ctx, index) {
                                   return PhotoViewGalleryPageOptions(
                                     minScale:
@@ -156,7 +271,10 @@ class _PostCardState extends State<PostCard> {
                                     maxScale:
                                         PhotoViewComputedScale.contained * 1.2,
                                     imageProvider: CachedNetworkImageProvider(
-                                      widget.post.galleryLink[index],
+                                      Provider.of<PostState>(context)
+                                          .getPosts(
+                                              widget.type)![widget.postIndex]
+                                          .galleryLink[index],
                                     ),
                                   );
                                 },
@@ -184,7 +302,7 @@ class _PostCardState extends State<PostCard> {
                                 child: Container(
                                   padding: EdgeInsets.fromLTRB(5, 0, 5, 0),
                                   child: Text(
-                                    "$currentImageIndex/${widget.post.galleryLink.length}",
+                                    "$currentImageIndex/${Provider.of<PostState>(context).getPosts(widget.type)![widget.postIndex].galleryLink.length}",
                                     style: TextStyle(
                                       fontSize: 16,
                                     ),
@@ -194,9 +312,14 @@ class _PostCardState extends State<PostCard> {
                             ],
                           ),
                         )
-                      : (widget.post.type == PostType.IMAGE)
+                      : (Provider.of<PostState>(context)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .type ==
+                              PostType.IMAGE)
                           ? CachedNetworkImage(
-                              imageUrl: widget.post.link,
+                              imageUrl: Provider.of<PostState>(context)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .link,
                               progressIndicatorBuilder:
                                   (context, url, progress) => Center(
                                         child: Container(
@@ -208,13 +331,26 @@ class _PostCardState extends State<PostCard> {
                                           ),
                                         ),
                                       ))
-                          : (widget.post.type == PostType.VIDEO ||
-                                  widget.post.type == PostType.GIF)
+                          : (Provider.of<PostState>(context)
+                                          .getPosts(
+                                              widget.type)![widget.postIndex]
+                                          .type ==
+                                      PostType.VIDEO ||
+                                  Provider.of<PostState>(context)
+                                          .getPosts(
+                                              widget.type)![widget.postIndex]
+                                          .type ==
+                                      PostType.GIF)
                               ? SizedBox(
                                   child: Chewie(controller: chewieController!),
-                                  height: widget.post.height,
+                                  height: Provider.of<PostState>(context)
+                                      .getPosts(widget.type)![widget.postIndex]
+                                      .height,
                                 )
-                              : (widget.post.type == PostType.LINK)
+                              : (Provider.of<PostState>(context)
+                                          .getPosts(widget.type)![widget.postIndex]
+                                          .type ==
+                                      PostType.LINK)
                                   ? LinkPreviewGenerator(
                                       placeholderWidget:
                                           CircularProgressIndicator(
@@ -227,7 +363,10 @@ class _PostCardState extends State<PostCard> {
                                           Color.fromRGBO(47, 50, 54, 1.0),
                                       borderRadius: 0,
                                       bodyMaxLines: 3,
-                                      link: widget.post.link,
+                                      link: Provider.of<PostState>(context)
+                                          .getPosts(
+                                              widget.type)![widget.postIndex]
+                                          .link,
                                       linkPreviewStyle: LinkPreviewStyle.small,
                                       removeElevation: true,
                                       showGraphic: true,
@@ -237,55 +376,37 @@ class _PostCardState extends State<PostCard> {
                     children: [
                       IconButton(
                           splashRadius: 20,
-                          color: isUpvoted
+                          color: Provider.of<PostState>(context)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .isUpvoted
                               ? Theme.of(context).accentColor
                               : Colors.white,
                           onPressed: () => {
-                                isUpvoted
-                                    ? {
-                                        widget.post.submission.clearVote(),
-                                        setState(() {
-                                          isUpvoted = false;
-                                          votes--;
-                                          widget.post.setVotes = votes;
-                                        }),
-                                        print(widget.post.votes)
-                                      }
-                                    : {
-                                        widget.post.submission.upvote(),
-                                        setState(() {
-                                          isUpvoted = true;
-                                          isDownvoted = false;
-                                          votes++;
-                                          widget.post.setVotes = votes;
-                                        }),
-                                        print(widget.post.votes)
-                                      }
+                                Provider.of<PostState>(context, listen: false)
+                                        .getPosts(
+                                            widget.type)![widget.postIndex]
+                                        .isUpvoted
+                                    ? onVote(false, clearVote: true)
+                                    : onVote(true)
                               },
                           icon: Icon(Icons.arrow_upward_outlined)),
-                      Text(votes.toString()),
+                      Text(Provider.of<PostState>(context)
+                          .getPosts(widget.type)![widget.postIndex]
+                          .votes
+                          .toString()),
                       IconButton(
                           splashRadius: 20,
-                          color: isDownvoted
+                          color: Provider.of<PostState>(context, listen: false)
+                                  .getPosts(widget.type)![widget.postIndex]
+                                  .isDownvoted
                               ? Theme.of(context).accentColor
                               : Colors.white,
-                          onPressed: () => isDownvoted
-                              ? {
-                                  widget.post.submission.clearVote(),
-                                  setState(() {
-                                    isDownvoted = false;
-                                    votes++;
-                                    widget.post.setVotes = votes;
-                                  })
-                                }
-                              : {
-                                  widget.post.submission.downvote(),
-                                  setState(() {
-                                    isUpvoted = false;
-                                    isDownvoted = true;
-                                    votes--;
-                                  })
-                                },
+                          onPressed: () =>
+                              Provider.of<PostState>(context, listen: false)
+                                      .getPosts(widget.type)![widget.postIndex]
+                                      .isDownvoted
+                                  ? onVote(false, clearVote: true)
+                                  : onVote(false),
                           icon: Icon(Icons.arrow_downward_outlined)),
                       IconButton(
                           splashRadius: 20,
@@ -294,19 +415,35 @@ class _PostCardState extends State<PostCard> {
                                     context,
                                     MaterialPageRoute(
                                       builder: (context) => CommentsScreen(
-                                        widget.post,
+                                        Provider.of<PostState>(context,
+                                                listen: false)
+                                            .getPosts(widget.type)!
+                                            .indexOf(
+                                              Provider.of<PostState>(context,
+                                                          listen: false)
+                                                      .getPosts(widget.type)![
+                                                  widget.postIndex],
+                                            ),
+                                        type: widget.type,
                                       ),
                                     ))
                               },
                           icon: Icon(Icons.message_outlined)),
-                      Text(widget.post.numComments.toString()),
+                      Text(Provider.of<PostState>(context)
+                          .getPosts(widget.type)![widget.postIndex]
+                          .numComments
+                          .toString()),
                       Expanded(
                         child: Align(
                           child: IconButton(
                             splashRadius: 20,
                             onPressed: () => {
                               Share.share(
-                                  widget.post.submission.shortlink.toString())
+                                  Provider.of<PostState>(context, listen: false)
+                                      .getPosts(widget.type)![widget.postIndex]
+                                      .submission
+                                      .shortlink
+                                      .toString())
                             },
                             icon: Icon(Icons.share),
                           ),

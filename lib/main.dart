@@ -2,7 +2,10 @@ import 'dart:async';
 
 import 'package:draw/draw.dart';
 import 'package:flora/Api/login.dart';
+import 'package:flora/PostScreen.dart';
+import 'package:flora/State/PostState.dart';
 import 'package:flora/State/RedditState.dart';
+// ignore: unused_import
 import 'package:flora/demo/demo.dart';
 import 'package:flora/loadingScreen.dart';
 import 'package:flora/loginScreen.dart';
@@ -28,6 +31,15 @@ void main() => runApp(MultiProvider(providers: [
             clientId: "v3VoDgsElkXfn1epCYYhag",
             redirectUri: redirectUri,
           ),
+        ),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => PostState(
+          {
+            FilterType.Best: [],
+            FilterType.Hot: [],
+            FilterType.Newest: [],
+          },
         ),
       ),
     ], child: Flora()));

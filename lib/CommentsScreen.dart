@@ -1,13 +1,19 @@
 import 'package:draw/draw.dart';
+import 'package:flora/PostScreen.dart';
+import 'package:flora/State/PostState.dart';
 import 'package:flora/Types/postType.dart';
 import 'package:flora/Widgets/commentBranch.dart';
 import 'package:flora/Widgets/postCard.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:provider/provider.dart';
 
 class CommentsScreen extends StatefulWidget {
-  CommentsScreen(this.post, {Key? key}) : super(key: key);
+  CommentsScreen(this.postIndex, {Key? key, this.type = FilterType.Best})
+      : super(key: key);
 
-  var post;
+  int postIndex;
+  FilterType type;
 
   @override
   _CommentsScreenState createState() => _CommentsScreenState();
@@ -25,44 +31,38 @@ class _CommentsScreenState extends State<CommentsScreen> {
 
   fetchComments() async {
     // If we want to look at all comments.
-    if (widget.post.runtimeType != Comment) {
-      await widget.post.parse();
-      await widget.post.submission
-          .refreshComments()
-          .then((value) => setState(() {
-                loaded = true;
-                _numComments = value.length;
-              }));
-    } else {
-      // if we want to look at a singular comment forest.
-      setState(() {
-        loaded = true;
-        _numComments = 1;
-      });
-    }
+    await Provider.of<PostState>(context, listen: false)
+        .getPosts(widget.type)![widget.postIndex]
+        .parse();
+    await Provider.of<PostState>(context, listen: false)
+        .getPosts(widget.type)![widget.postIndex]
+        .submission
+        .refreshComments()
+        .then((value) => setState(() {
+              loaded = true;
+              _numComments = value.length;
+            }));
   }
 
   Widget _generateBranches() {
-    if (widget.post.runtimeType == Comment) {
-      print('called');
-      return CommentBranch(widget.post);
-    }
-
     return ListView.builder(
       itemCount: _numComments + 1,
       itemBuilder: (ctx, index) {
-        if (index == 0 && widget.post.runtimeType != Comment) {
-          return PostCard(
-            widget.post,
-            key: ValueKey(widget.post.submission.id),
-          );
+        if (index == 0) {
+          return PostCard(widget.postIndex, widget.type);
         }
-        print(widget.post.submission.comments?.length);
-        if (widget.post.submission.comments?[index - 1].runtimeType ==
+
+        if (Provider.of<PostState>(context, listen: false)
+                .getPosts(widget.type)![widget.postIndex]
+                .submission
+                .comments?[index - 1]
+                .runtimeType ==
             Comment) {
-          print(widget.post.submission.comments?[index - 1]);
           return CommentBranch(
-            widget.post.submission.comments?[index - 1],
+            Provider.of<PostState>(context, listen: false)
+                .getPosts(widget.type)![widget.postIndex]
+                .submission
+                .comments?[index - 1],
           );
         } else {
           return ElevatedButton(
@@ -82,7 +82,11 @@ class _CommentsScreenState extends State<CommentsScreen> {
           automaticallyImplyLeading: false,
           leading: IconButton(
               icon: Icon(Icons.arrow_back),
-              onPressed: () => {Navigator.pop(context)}),
+              onPressed: () => {
+                    SchedulerBinding.instance?.addPostFrameCallback((_) {
+                      Navigator.pop(context);
+                    })
+                  }),
           title: Text("Comments"),
         ),
         body: loaded

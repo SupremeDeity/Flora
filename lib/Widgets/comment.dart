@@ -1,5 +1,6 @@
 import 'package:draw/draw.dart' as Draw;
 import 'package:flora/CommentsScreen.dart';
+import 'package:flora/Widgets/MoreComments.dart';
 import 'package:flora/Widgets/RedditMarkdown.dart';
 import 'package:flutter/material.dart';
 
@@ -149,9 +150,9 @@ class _CommentState extends State<Comment> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (ctx) =>
-                                        CommentsScreen(widget.comment),
-                                  ),
+                                      builder: (ctx) =>
+                                          // MoreCommentsScreen(widget.comment),
+                                          Container()),
                                 )
                               },
                       child: Text(
