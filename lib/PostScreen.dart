@@ -1,6 +1,6 @@
 import 'package:draw/draw.dart';
 import 'package:flora/Types/postType.dart';
-import 'package:flora/State/globalState.dart';
+import 'package:flora/State/RedditState.dart';
 import 'package:flora/Widgets/postCard.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +29,12 @@ class _PostsRouteState extends State<PostsRoute> {
       RefreshController(initialRefresh: false);
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    print("yeah boi they did");
+  }
+
+  @override
   void initState() {
     super.initState();
 
@@ -48,8 +54,6 @@ class _PostsRouteState extends State<PostsRoute> {
       fetchPosts("");
     }
   }
-
-  
 
   @override
   void dispose() {
@@ -96,7 +100,7 @@ class _PostsRouteState extends State<PostsRoute> {
   Widget _buildPost(Post post) {
     return PostCard(
       post,
-      key: ValueKey(post.submission.id),
+      // key: GlobalKey(),
     );
   }
 

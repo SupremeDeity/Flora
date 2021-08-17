@@ -1,5 +1,5 @@
 import 'package:flora/Api/login.dart';
-import 'package:flora/State/globalState.dart';
+import 'package:flora/State/RedditState.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

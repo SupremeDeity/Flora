@@ -1,5 +1,5 @@
 import 'package:flora/Widgets/drawer.dart';
-import 'package:flora/Widgets/posts.dart';
+import 'package:flora/PostScreen.dart';
 import 'package:flutter/material.dart';
 
 class FloraHomePage extends StatefulWidget {

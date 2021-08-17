@@ -1,8 +1,9 @@
 import 'package:draw/draw.dart';
+import 'package:flutter/foundation.dart';
 
 enum PostType { LINK, IMAGE, GIF, VIDEO, SELF, GALLERY }
 
-class Post {
+class Post extends ChangeNotifier {
   Post(this._post);
 
   Submission _post;
@@ -99,6 +100,7 @@ class Post {
         this._setLink = link;
       }
     }
+
     return;
   }
 
@@ -164,6 +166,7 @@ class Post {
 
   set setVotes(int votes) {
     _votes = votes;
+    notifyListeners();
   }
 
   int get numComments {

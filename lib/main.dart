@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:draw/draw.dart';
 import 'package:flora/Api/login.dart';
-import 'package:flora/State/globalState.dart';
+import 'package:flora/State/RedditState.dart';
 import 'package:flora/demo/demo.dart';
 import 'package:flora/loadingScreen.dart';
 import 'package:flora/loginScreen.dart';

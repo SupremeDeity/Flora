@@ -51,12 +51,6 @@ class _CommentsScreenState extends State<CommentsScreen> {
     return ListView.builder(
       itemCount: _numComments + 1,
       itemBuilder: (ctx, index) {
-        // if (index == widget.post.submission.numComments) {
-        //   return Container(
-        //       padding: EdgeInsets.all(5),
-        //       child: Center(
-        //           child: CircularProgressIndicator(color: Colors.orange)));
-        // }
         if (index == 0 && widget.post.runtimeType != Comment) {
           return PostCard(
             widget.post,
@@ -64,9 +58,18 @@ class _CommentsScreenState extends State<CommentsScreen> {
           );
         }
         print(widget.post.submission.comments?.length);
-        return CommentBranch(
-          widget.post.submission.comments?[index - 1],
-        );
+        if (widget.post.submission.comments?[index - 1].runtimeType ==
+            Comment) {
+          print(widget.post.submission.comments?[index - 1]);
+          return CommentBranch(
+            widget.post.submission.comments?[index - 1],
+          );
+        } else {
+          return ElevatedButton(
+            onPressed: () {},
+            child: Text("More"),
+          );
+        }
       },
     );
   }

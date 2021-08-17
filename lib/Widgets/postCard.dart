@@ -31,7 +31,7 @@ class _PostCardState extends State<PostCard> {
   bool overflow = false;
   bool _loaded = false;
   bool _isSaved = false;
-  var previewData;
+  bool change = false;
 
   // Video Player
   late VideoPlayerController? videoPlayerController;
@@ -81,6 +81,7 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
+    print("build call");
     return _loaded
         ? GestureDetector(
             onTap: () {
@@ -246,8 +247,9 @@ class _PostCardState extends State<PostCard> {
                                         setState(() {
                                           isUpvoted = false;
                                           votes--;
-                                          print(votes);
-                                        })
+                                          widget.post.setVotes = votes;
+                                        }),
+                                        print(widget.post.votes)
                                       }
                                     : {
                                         widget.post.submission.upvote(),
@@ -255,8 +257,9 @@ class _PostCardState extends State<PostCard> {
                                           isUpvoted = true;
                                           isDownvoted = false;
                                           votes++;
-                                          print(votes);
-                                        })
+                                          widget.post.setVotes = votes;
+                                        }),
+                                        print(widget.post.votes)
                                       }
                               },
                           icon: Icon(Icons.arrow_upward_outlined)),
@@ -272,6 +275,7 @@ class _PostCardState extends State<PostCard> {
                                   setState(() {
                                     isDownvoted = false;
                                     votes++;
+                                    widget.post.setVotes = votes;
                                   })
                                 }
                               : {
@@ -289,8 +293,9 @@ class _PostCardState extends State<PostCard> {
                                 Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          CommentsScreen(widget.post),
+                                      builder: (context) => CommentsScreen(
+                                        widget.post,
+                                      ),
                                     ))
                               },
                           icon: Icon(Icons.message_outlined)),

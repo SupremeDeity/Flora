@@ -11,10 +11,6 @@ class RedditInstanceState with ChangeNotifier {
   }
 
   Reddit get getInstance {
-    // if (_isAuthenticated) {
-    //   refresh();
-    // }
-
     return _instance;
   }
 
