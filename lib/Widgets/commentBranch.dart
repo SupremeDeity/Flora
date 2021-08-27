@@ -16,20 +16,20 @@ class _CommentBranchState extends State<CommentBranch> {
   _generateLeafs() {
     List<Node> _replies = [];
     if ((widget.comment.replies?.length ?? 0) > 0) {
-      for (Draw.Comment comment in widget.comment.replies!.comments) {
-        _replies.add(Node(
-          Comment(
-            comment,
-            hasReplies: (comment.replies?.length ?? 0) > 0,
-          ),
-          key: ValueKey(comment.id),
-        ));
-      }
+      widget.comment.replies!.comments.forEach((comment) {
+        if (comment is Draw.Comment) {
+          _replies.add(Node(
+            Comment(
+              comment,
+              hasReplies: (comment.replies?.length ?? 0) > 0,
+            ),
+          ));
+        }
+      });
     }
 
     return Node(
       Comment(widget.comment),
-      key: ValueKey(widget.comment.id),
       child: _replies,
     );
   }

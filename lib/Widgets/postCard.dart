@@ -139,7 +139,6 @@ class _PostCardState extends State<PostCard> {
   }
 
   onSave(bool save) {
-    print("onSave: $save");
     Post _post = Provider.of<PostState>(context, listen: false)
         .getPosts(widget.type)![widget.postIndex];
 
@@ -151,7 +150,6 @@ class _PostCardState extends State<PostCard> {
       _isSaved = save;
     });
 
-    print("isSaved: $_isSaved");
     // Update PostState
     _post.setSaved = save;
 
@@ -217,6 +215,7 @@ class _PostCardState extends State<PostCard> {
                             ? Icon(Icons.bookmark_added_rounded)
                             : Icon(Icons.bookmark_add_outlined)),
                   ),
+                  Divider(color: Colors.black54),
                   ListTile(
                     title: Text(Provider.of<PostState>(context)
                         .getPosts(widget.type)![widget.postIndex]
@@ -249,12 +248,13 @@ class _PostCardState extends State<PostCard> {
                               .getPosts(widget.type)![widget.postIndex]
                               .type ==
                           PostType.GALLERY)
-                      ? Container(
+                      ? SizedBox(
                           height: 300,
                           child: Stack(
                             alignment: Alignment.topRight,
                             children: [
                               PhotoViewGallery.builder(
+                                pageController: PageController(initialPage: 0),
                                 onPageChanged: (index) {
                                   setState(() {
                                     currentImageIndex = index + 1;
@@ -316,21 +316,23 @@ class _PostCardState extends State<PostCard> {
                                   .getPosts(widget.type)![widget.postIndex]
                                   .type ==
                               PostType.IMAGE)
-                          ? CachedNetworkImage(
-                              imageUrl: Provider.of<PostState>(context)
-                                  .getPosts(widget.type)![widget.postIndex]
-                                  .link,
-                              progressIndicatorBuilder:
-                                  (context, url, progress) => Center(
-                                        child: Container(
-                                          width: 30.0,
-                                          height: 30.0,
-                                          child: CircularProgressIndicator(
-                                            backgroundColor: Colors.orange,
-                                            value: progress.progress,
-                                          ),
-                                        ),
-                                      ))
+                          ? SizedBox(
+                              child: CachedNetworkImage(
+                                  imageUrl: Provider.of<PostState>(context)
+                                      .getPosts(widget.type)![widget.postIndex]
+                                      .link,
+                                  progressIndicatorBuilder:
+                                      (context, url, progress) => Center(
+                                            child: Container(
+                                              width: 30.0,
+                                              height: 30.0,
+                                              child: CircularProgressIndicator(
+                                                backgroundColor: Colors.orange,
+                                                value: progress.progress,
+                                              ),
+                                            ),
+                                          )),
+                            )
                           : (Provider.of<PostState>(context)
                                           .getPosts(
                                               widget.type)![widget.postIndex]
@@ -348,7 +350,8 @@ class _PostCardState extends State<PostCard> {
                                       .height,
                                 )
                               : (Provider.of<PostState>(context)
-                                          .getPosts(widget.type)![widget.postIndex]
+                                          .getPosts(
+                                              widget.type)![widget.postIndex]
                                           .type ==
                                       PostType.LINK)
                                   ? LinkPreviewGenerator(
@@ -367,7 +370,7 @@ class _PostCardState extends State<PostCard> {
                                           .getPosts(
                                               widget.type)![widget.postIndex]
                                           .link,
-                                      linkPreviewStyle: LinkPreviewStyle.small,
+                                      linkPreviewStyle: LinkPreviewStyle.large,
                                       removeElevation: true,
                                       showGraphic: true,
                                     )

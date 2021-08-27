@@ -13,7 +13,7 @@ dependencies:
   chewie: ^1.2.2
   cupertino_icons: ^1.0.3
   draw:
-    path: /home/mohsin/Dev/Flutter/DRAW
+    path: /home/mohsin/Dev/Flutter/DRAW-Updated
   flutter:
     sdk: flutter
   flutter_markdown: ^0.6.4

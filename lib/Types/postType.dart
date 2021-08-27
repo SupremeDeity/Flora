@@ -54,7 +54,7 @@ class Post {
   /// Populates the fields by parsing [Submission]
   Future parse() async {
     this._setFullName = _post.fullname!;
-    this._setAuthorName = _post.author;
+    this._setAuthorName = _post.author.displayName;
     this._setSubredditName = _post.data!['subreddit_name_prefixed'];
     this._setTitle = _post.title;
     this._setSelfText = _post.selftext;
@@ -64,8 +64,7 @@ class Post {
     this._isSaved = _post.saved;
     _getPostType();
 
-    await _post.reddit
-        .redditor(_post.author)
+    await _post.author
         .populate()
         .then((value) => {this._setAvatar = value.data!['icon_img']});
 

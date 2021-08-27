@@ -109,7 +109,7 @@ packages:
   draw:
     dependency: "direct main"
     description:
-      path: "/home/mohsin/Dev/Flutter/DRAW"
+      path: "/home/mohsin/Dev/Flutter/DRAW-Updated"
       relative: false
     source: path
     version: "1.0.1"

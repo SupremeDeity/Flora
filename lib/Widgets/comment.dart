@@ -1,8 +1,11 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:draw/draw.dart' as Draw;
 import 'package:flora/CommentsScreen.dart';
+import 'package:flora/State/themes.dart';
 import 'package:flora/Widgets/MoreComments.dart';
 import 'package:flora/Widgets/RedditMarkdown.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class Comment extends StatefulWidget {
   Comment(
@@ -26,6 +29,7 @@ class _CommentState extends State<Comment> {
   bool _isDownvoted = false;
   bool _isSaved = false;
   int _votes = 0;
+  String _iconLink = "";
 
   @override
   void initState() {
@@ -34,11 +38,23 @@ class _CommentState extends State<Comment> {
     _isDownvoted = widget.comment.vote == Draw.VoteState.downvoted;
     _isSaved = widget.comment.saved;
     _votes = widget.comment.score;
+
+    _getAvatarImageLink();
+  }
+
+  _getAvatarImageLink() async {
+    await widget.comment.author.populate().then((value) => {
+          if (mounted)
+            setState(() {
+              _iconLink = value.data!['icon_img'];
+            })
+        });
   }
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: Charcoal,
       margin: EdgeInsets.fromLTRB(6, 2, 6, 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,10 +67,28 @@ class _CommentState extends State<Comment> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  widget.comment.author,
-                  style: TextStyle(fontSize: 10, color: Colors.orange),
-                  textAlign: TextAlign.left,
+                ListTile(
+                  visualDensity: VisualDensity.compact,
+                  dense: true,
+                  minLeadingWidth: 20,
+                  leading: CircleAvatar(
+                    maxRadius: 12,
+                    foregroundImage: _iconLink != ""
+                        ? CachedNetworkImageProvider(_iconLink)
+                        : null,
+                    child: _iconLink == ""
+                        ? FaIcon(FontAwesomeIcons.redditAlien)
+                        : null,
+                    backgroundColor: Color.fromARGB(0, 0, 0, 0),
+                  ),
+                  title: Text(
+                    widget.comment.author.displayName,
+                    style: TextStyle(fontSize: 10, color: Colors.orange),
+                    textAlign: TextAlign.left,
+                  ),
+                ),
+                Divider(
+                  color: Colors.black54,
                 ),
                 RedditMarkdown(
                   data: widget.comment.body!,
@@ -62,6 +96,7 @@ class _CommentState extends State<Comment> {
               ],
             ),
           ),
+          Divider(color: Colors.black54),
           Container(
             color: Theme.of(context).backgroundColor,
             child: Row(

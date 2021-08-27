@@ -63,6 +63,7 @@ class _PostsRouteState extends State<PostsRoute> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _refreshController.dispose();
     super.dispose();
   }
 
@@ -95,6 +96,7 @@ class _PostsRouteState extends State<PostsRoute> {
                 _isLoaded = true;
                 if (_refreshController.isRefresh) {
                   _refreshController.refreshCompleted();
+                  _refreshController = RefreshController(initialRefresh: false);
                 }
               })
             });
@@ -105,10 +107,11 @@ class _PostsRouteState extends State<PostsRoute> {
   // A singular post
   Widget _buildPost(Post post) {
     return PostCard(
-        Provider.of<PostState>(context, listen: false)
-            .getPosts(widget.type)!
-            .indexOf(post),
-        widget.type);
+      Provider.of<PostState>(context, listen: false)
+          .getPosts(widget.type)!
+          .indexOf(post),
+      widget.type,
+    );
   }
 
   _refreshData() {

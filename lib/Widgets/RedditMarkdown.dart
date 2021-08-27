@@ -15,6 +15,7 @@ class RedditMarkdown extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       child: MarkdownBody(
+        key: UniqueKey(),
         onTapLink: (text, link, title) => {launch(link!)},
         data: data,
         inlineSyntaxes: [
